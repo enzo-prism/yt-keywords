@@ -9,8 +9,9 @@ export function middleware(request: NextRequest) {
   }
 
   const ip =
-    request.ip ??
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    request.headers.get("x-real-ip")?.trim() ??
+    request.headers.get("cf-connecting-ip")?.trim() ??
     "unknown";
 
   const { allowed, remaining, resetAt } = checkRateLimit(ip);
