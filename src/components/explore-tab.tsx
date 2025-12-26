@@ -268,6 +268,14 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
     return "bg-zinc-200 text-zinc-900";
   };
 
+  const difficultyBadgeClass = (
+    label: OpportunityResult["labels"]["difficulty"]
+  ) => {
+    if (label === "Easy") return "bg-emerald-100 text-emerald-900";
+    if (label === "Medium") return "bg-amber-100 text-amber-900";
+    return "bg-rose-100 text-rose-900";
+  };
+
   return (
     <div className="space-y-10">
       <Card className="border-black/5 bg-white/80 backdrop-blur">
@@ -628,7 +636,15 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <span className="font-medium">{item.scores.difficulty}</span>
-                          <Badge variant="secondary">{item.labels.difficulty}</Badge>
+                          <Badge
+                            variant="secondary"
+                            className={cn(
+                              "border-transparent",
+                              difficultyBadgeClass(item.labels.difficulty)
+                            )}
+                          >
+                            {item.labels.difficulty}
+                          </Badge>
                         </div>
                       </TableCell>
                       <TableCell>
