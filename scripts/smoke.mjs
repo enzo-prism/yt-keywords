@@ -1,62 +1,65 @@
 import dotenv from "dotenv";
 
-import { getYouTubeKeywordIdeasWithVolume } from "../src/lib/keywordtool.ts";
-import { scoreOpportunity } from "../src/lib/scoring/opportunity.ts";
-import { getYouTubeVideos } from "../src/lib/youtube.ts";
-
 dotenv.config({ path: ".env.local" });
 
 const seed = "how to edit videos";
-const limitKeywords = 5;
-const maxVideos = 5;
+const maxKeywords = 5;
+const videosPerKeyword = 5;
+const baseUrl = process.env.APP_URL || "http://localhost:3000";
 
-function formatIdea(idea) {
-  return `${idea.keyword} (${idea.volume})`;
+async function fetchJson(url, options) {
+  const response = await fetch(url, options);
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`${response.status} ${response.statusText}: ${text.slice(0, 200)}`);
+  }
+  return response.json();
 }
 
 async function run() {
-  const ideas = await getYouTubeKeywordIdeasWithVolume({
-    seed,
-    limit: limitKeywords,
-  });
-
-  if (!ideas.length) {
-    throw new Error("No keyword ideas returned.");
+  let health;
+  try {
+    health = await fetchJson(`${baseUrl}/api/health`);
+  } catch (error) {
+    throw new Error(
+      `Failed to reach ${baseUrl}. Start the dev server before running smoke.`
+    );
   }
 
-  console.log(`KeywordTool ideas: ${ideas.length}`);
-  ideas.slice(0, 3).forEach((idea, index) => {
-    console.log(`${index + 1}. ${formatIdea(idea)}`);
-  });
-
-  const topKeyword = ideas[0]?.keyword;
-  if (!topKeyword) {
-    throw new Error("Missing top keyword.");
+  if (!health.keywordtoolConfigured || !health.youtubeConfigured) {
+    throw new Error(`Missing env keys: ${(health.missingKeys || []).join(", ")}`);
   }
 
-  const videos = await getYouTubeVideos(topKeyword, maxVideos);
-  if (!videos.length) {
-    throw new Error("No YouTube videos returned.");
-  }
-
-  const firstVideo = videos[0];
-  console.log(`YouTube videos: ${videos.length}`);
-  console.log(
-    `Top video: ${firstVideo.title} | ${firstVideo.publishedAt} | ${firstVideo.viewCount} views`
-  );
-
-  const volumes = ideas.map((idea) => idea.volume);
-  const minVolume = Math.min(...volumes);
-  const maxVolume = Math.max(...volumes);
-  const opportunity = scoreOpportunity({
-    keyword: topKeyword,
-    volume: ideas[0].volume,
-    minVolume,
-    maxVolume,
-    videos,
+  const payload = await fetchJson(`${baseUrl}/api/score`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      seed,
+      maxKeywords,
+      videosPerKeyword,
+      minVolume: 0,
+      hideNoise: true,
+      cluster: true,
+    }),
   });
 
-  console.log(`Opportunity score: ${opportunity.score}`);
+  const results = payload.results ?? [];
+  if (!results.length) {
+    throw new Error("No scored results returned.");
+  }
+
+  const first = results[0];
+  if (!first?.scores || typeof first.scores.searchVolumeScore !== "number") {
+    throw new Error("Missing score breakdown in response.");
+  }
+
+  console.log(`Health: ok (kv=${health.kvConfigured ? "on" : "off"})`);
+  console.log(`Results: ${results.length}`);
+  results.slice(0, 3).forEach((result, index) => {
+    console.log(
+      `${index + 1}. ${result.keyword} | ${result.volume} | ${result.scores.opportunityScore}`
+    );
+  });
 }
 
 run().catch((error) => {

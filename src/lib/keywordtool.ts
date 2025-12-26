@@ -1,19 +1,31 @@
 import { createHash } from "node:crypto";
 
-import { keywordSuggestionsCache, keywordVolumeCache } from "./cache/index.ts";
-import { getEnv } from "./env.ts";
+import {
+  keywordSuggestionsCache,
+  keywordVolumeCache,
+} from "./cache/index.ts";
+import { getCachedValue, setCachedValue } from "./cache/persistent.ts";
+import { getEnv, getEnvStatus } from "./env.ts";
 import { fetchJson } from "./http.ts";
 import type { KeywordIdea } from "./types.ts";
 
 const SUGGESTIONS_ENDPOINT =
   "https://api.keywordtool.io/v2/search/suggestions/youtube";
 const VOLUME_ENDPOINT = "https://api.keywordtool.io/v2/search/volume/youtube";
+const TRENDS_SUGGESTIONS_ENDPOINT =
+  "https://api.keywordtool.io/v2/search/suggestions/google-trends";
 
 const DEFAULT_COUNTRY = "US";
 const DEFAULT_LANGUAGE = "en";
-const DEFAULT_TYPE = "suggestions";
+const DEFAULT_MODE: SuggestionMode = "suggestions";
 const DEFAULT_LIMIT = 25;
 const MAX_LIMIT = 50;
+
+export type SuggestionMode =
+  | "suggestions"
+  | "questions"
+  | "prepositions"
+  | "trends";
 
 function normalizeKey(value: string) {
   return value.trim().toLowerCase();
@@ -109,9 +121,33 @@ function extractVolumeItems(payload: unknown): Array<Record<string, unknown>> {
   return items;
 }
 
-function buildVolumeMap(payload: unknown): Record<string, number> {
+function extractMonthlyVolumes(item: Record<string, unknown>): number[] | null {
+  const months: Array<{ year: number; month: number; value: number }> = [];
+
+  for (let i = 1; i <= 12; i += 1) {
+    const value = normalizeVolume(item[`m${i}`]);
+    const month = Number(item[`m${i}_month`]);
+    const year = Number(item[`m${i}_year`]);
+    if (!Number.isFinite(month) || !Number.isFinite(year)) continue;
+    months.push({ year, month, value });
+  }
+
+  if (months.length === 0) return null;
+
+  months.sort((a, b) => {
+    if (a.year !== b.year) return a.year - b.year;
+    return a.month - b.month;
+  });
+
+  return months.map((entry) => entry.value);
+}
+
+function buildVolumeMap(
+  payload: unknown
+): Record<string, { volume: number; monthlyVolumes: number[] | null }> {
   const items = extractVolumeItems(payload);
-  const map: Record<string, number> = {};
+  const map: Record<string, { volume: number; monthlyVolumes: number[] | null }> =
+    {};
 
   for (const item of items) {
     const keyword =
@@ -123,7 +159,8 @@ function buildVolumeMap(payload: unknown): Record<string, number> {
 
     if (!keyword) continue;
     const volume = normalizeVolume(item.volume);
-    map[normalizeKey(keyword)] = volume;
+    const monthlyVolumes = extractMonthlyVolumes(item);
+    map[normalizeKey(keyword)] = { volume, monthlyVolumes };
   }
 
   return map;
@@ -147,15 +184,23 @@ async function fetchSuggestions(args: {
   limit: number;
   country: string;
   language: string;
-  type: string;
+  mode: SuggestionMode;
 }): Promise<string[]> {
-  const cacheKey = `${normalizeKey(args.seed)}::${args.country}::${args.language}::${args.type}::${args.limit}`;
-  const cached = keywordSuggestionsCache.get(cacheKey);
-  if (cached) return cached;
+  const cacheKey = `${normalizeKey(args.seed)}::${args.country}::${args.language}::${args.mode}::${args.limit}`;
+  const cached = await getCachedValue(
+    cacheKey,
+    keywordSuggestionsCache,
+    24 * 60 * 60 * 1000
+  );
+  if (cached !== undefined) return cached;
 
   const env = getEnv();
+  const endpoint =
+    args.mode === "trends"
+      ? TRENDS_SUGGESTIONS_ENDPOINT
+      : SUGGESTIONS_ENDPOINT;
   const payload = await fetchJson<unknown>(
-    SUGGESTIONS_ENDPOINT,
+    endpoint,
     {
       method: "POST",
       body: JSON.stringify({
@@ -163,7 +208,7 @@ async function fetchSuggestions(args: {
         keyword: args.seed,
         country: args.country,
         language: args.language,
-        type: args.type,
+        type: args.mode === "trends" ? "suggestions" : args.mode,
         output: "json",
       }),
     },
@@ -185,17 +230,21 @@ async function fetchSuggestions(args: {
   }
 
   const limited = deduped.slice(0, args.limit);
-  keywordSuggestionsCache.set(cacheKey, limited);
+  await setCachedValue(cacheKey, limited, keywordSuggestionsCache, 24 * 60 * 60 * 1000);
   return limited;
 }
 
 async function fetchVolumes(args: {
   keywords: string[];
   country: string;
-}): Promise<Record<string, number>> {
+}): Promise<Record<string, { volume: number; monthlyVolumes: number[] | null }>> {
   const cacheKey = `${hashKeywords(args.keywords)}::${args.country}`;
-  const cached = keywordVolumeCache.get(cacheKey);
-  if (cached) return cached;
+  const cached = await getCachedValue(
+    cacheKey,
+    keywordVolumeCache,
+    24 * 60 * 60 * 1000
+  );
+  if (cached !== undefined) return cached;
 
   const env = getEnv();
   const payload = await fetchJson<unknown>(
@@ -214,7 +263,7 @@ async function fetchVolumes(args: {
 
   assertNoKeywordToolErrors(payload);
   const volumeMap = buildVolumeMap(payload);
-  keywordVolumeCache.set(cacheKey, volumeMap);
+  await setCachedValue(cacheKey, volumeMap, keywordVolumeCache, 24 * 60 * 60 * 1000);
   return volumeMap;
 }
 
@@ -223,20 +272,24 @@ export async function getYouTubeKeywordIdeasWithVolume(args: {
   limit: number;
   country?: string;
   language?: string;
-  type?: string;
+  suggestionMode?: SuggestionMode;
 }): Promise<KeywordIdea[]> {
   const seed = args.seed.trim();
   const limit = Math.min(Math.max(args.limit ?? DEFAULT_LIMIT, 1), MAX_LIMIT);
   const country = (args.country ?? DEFAULT_COUNTRY).toUpperCase();
   const language = (args.language ?? DEFAULT_LANGUAGE).toLowerCase();
-  const type = args.type ?? DEFAULT_TYPE;
+  const mode = args.suggestionMode ?? DEFAULT_MODE;
+
+  if (mode === "trends" && !getEnvStatus().trendsEnabled) {
+    throw new Error("Google Trends suggestions are disabled.");
+  }
 
   const suggestions = await fetchSuggestions({
     seed,
     limit,
     country,
     language,
-    type,
+    mode,
   });
 
   const merged: string[] = [];
@@ -261,6 +314,7 @@ export async function getYouTubeKeywordIdeasWithVolume(args: {
   // Preserve suggestion order (seed first) while attaching volumes.
   return limited.map((keyword) => ({
     keyword,
-    volume: volumeMap[normalizeKey(keyword)] ?? 0,
+    volume: volumeMap[normalizeKey(keyword)]?.volume ?? 0,
+    monthlyVolumes: volumeMap[normalizeKey(keyword)]?.monthlyVolumes ?? null,
   }));
 }

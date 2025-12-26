@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getEnv } from "@/lib/env";
-import { getYouTubeVideos } from "@/lib/youtube";
+import { formatEnvError, getEnv } from "@/lib/env";
+import { getYouTubeSerp } from "@/lib/youtube";
 
 export const runtime = "nodejs";
 
@@ -29,19 +29,16 @@ export async function POST(request: Request) {
 
   try {
     getEnv();
-  } catch {
+  } catch (error) {
     return NextResponse.json(
-      { error: "Server misconfigured." },
+      { error: formatEnvError(error) },
       { status: 500 }
     );
   }
 
   try {
-    const videos = await getYouTubeVideos(
-      parsed.data.keyword,
-      parsed.data.maxVideos
-    );
-    return NextResponse.json(videos);
+    const serp = await getYouTubeSerp(parsed.data.keyword, parsed.data.maxVideos);
+    return NextResponse.json(serp);
   } catch (error) {
     const message = error instanceof Error ? error.message : "YouTube API failed.";
     return NextResponse.json({ error: message }, { status: 500 });

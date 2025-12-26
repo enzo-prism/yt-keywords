@@ -1,14 +1,22 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getEnv } from "@/lib/env";
-import { getYouTubeKeywordIdeasWithVolume } from "@/lib/keywordtool";
+import { formatEnvError, getEnv } from "@/lib/env";
+import {
+  getYouTubeKeywordIdeasWithVolume,
+  type SuggestionMode,
+} from "@/lib/keywordtool";
 
 export const runtime = "nodejs";
 
 const requestSchema = z.object({
   seed: z.string().min(2).max(120),
   limit: z.number().int().min(1).max(50),
+  country: z.string().length(2).optional(),
+  language: z.string().min(2).optional(),
+  suggestionMode: z
+    .enum(["suggestions", "questions", "prepositions", "trends"])
+    .optional(),
 });
 
 export async function POST(request: Request) {
@@ -29,21 +37,25 @@ export async function POST(request: Request) {
 
   try {
     getEnv();
-  } catch {
+  } catch (error) {
     return NextResponse.json(
-      { error: "Server misconfigured." },
+      { error: formatEnvError(error) },
       { status: 500 }
     );
   }
 
   try {
     const ideas = await getYouTubeKeywordIdeasWithVolume({
-      seed: parsed.data.seed,
+      seed: parsed.data.seed.trim(),
       limit: parsed.data.limit,
+      country: parsed.data.country,
+      language: parsed.data.language,
+      suggestionMode: parsed.data.suggestionMode as SuggestionMode | undefined,
     });
     return NextResponse.json(ideas);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Keyword API failed.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    const status = message.includes("disabled") ? 400 : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 }
