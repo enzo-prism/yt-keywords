@@ -682,9 +682,9 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
       </section>
 
       <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
-        <DrawerContent className="bg-white/95">
-          <div className="mx-auto w-full max-w-5xl">
-            <DrawerHeader>
+        <DrawerContent className="bg-white/95 overflow-hidden">
+          <div className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col">
+            <DrawerHeader className="shrink-0">
               <DrawerTitle className="text-2xl">
                 {selected?.keyword || "Keyword details"}
               </DrawerTitle>
@@ -701,23 +701,27 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
               </DrawerDescription>
             </DrawerHeader>
 
-            {!selected && (
-              <div className="px-4 pb-10">
-                <Card>
-                  <CardContent className="space-y-4">
-                    {Array.from({ length: 3 }).map((_, index) => (
-                      <Skeleton key={`drawer-skel-${index}`} className="h-6" />
-                    ))}
-                  </CardContent>
-                </Card>
-              </div>
-            )}
+            <div
+              className="flex-1 min-h-0 overflow-y-auto px-4 pb-12"
+              data-vaul-scroll
+            >
+              {!selected && (
+                <div className="pb-10">
+                  <Card>
+                    <CardContent className="space-y-4">
+                      {Array.from({ length: 3 }).map((_, index) => (
+                        <Skeleton key={`drawer-skel-${index}`} className="h-6" />
+                      ))}
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
 
-            {selected && (
-              <div className="space-y-8 px-4 pb-12">
-                <div className="grid gap-4 md:grid-cols-4">
-                  <Card className="border-black/5">
-                    <CardHeader>
+              {selected && (
+                <div className="space-y-8">
+                  <div className="grid gap-4 md:grid-cols-4">
+                    <Card className="border-black/5">
+                      <CardHeader>
                       <CardDescription>Volume</CardDescription>
                       <CardTitle className="text-2xl">
                         {formatNumber(selected.volume)}
@@ -1045,8 +1049,9 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
                     </CardContent>
                   </Card>
                 )}
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </div>
         </DrawerContent>
       </Drawer>
