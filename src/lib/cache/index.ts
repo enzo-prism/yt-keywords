@@ -38,3 +38,8 @@ export const youtubeChannelResolveCache = new LRUCache<string, string>({
   maxSize: 300,
   ttlMs: 12 * ONE_HOUR_MS,
 });
+
+export const youtubeChannelUploadsCache = new LRUCache<string, string>({
+  maxSize: 300,
+  ttlMs: 12 * ONE_HOUR_MS,
+});

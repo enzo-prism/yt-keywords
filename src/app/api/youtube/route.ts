@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { formatEnvError, getEnv } from "@/lib/env";
 import { formatExternalApiError } from "@/lib/api-errors";
+import { buildQuotaUser } from "@/lib/quota-user";
 import { getYouTubeSerp } from "@/lib/youtube";
 
 export const runtime = "nodejs";
@@ -28,8 +29,9 @@ export async function POST(request: Request) {
     );
   }
 
+  let env: ReturnType<typeof getEnv>;
   try {
-    getEnv();
+    env = getEnv();
   } catch (error) {
     return NextResponse.json(
       { error: formatEnvError(error) },
@@ -37,9 +39,22 @@ export async function POST(request: Request) {
     );
   }
 
+  const quotaUser = buildQuotaUser(request, env.YOUTUBE_API_KEY);
+
   try {
-    const serp = await getYouTubeSerp(parsed.data.keyword, parsed.data.maxVideos);
-    return NextResponse.json(serp);
+    let staleUsed = false;
+    const serp = await getYouTubeSerp(parsed.data.keyword, parsed.data.maxVideos, {
+      quotaUser,
+      allowStaleOnRateLimit: true,
+      onStale: () => {
+        staleUsed = true;
+      },
+    });
+    const response = NextResponse.json(serp);
+    if (staleUsed) {
+      response.headers.set("X-HotContent-Cache", "STALE_FALLBACK");
+    }
+    return response;
   } catch (error) {
     const formatted = formatExternalApiError(error, "google");
     return NextResponse.json(

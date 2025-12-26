@@ -1,3 +1,5 @@
+import { YouTubeApiError } from "./youtube-request.ts";
+
 export type ExternalProvider = "google" | "keyword tool";
 
 type ExternalApiError = {
@@ -6,7 +8,10 @@ type ExternalApiError = {
   isRateLimit: boolean;
 };
 
-function detectRateLimit(message: string): boolean {
+function detectRateLimit(message: string, error?: unknown): boolean {
+  if (error instanceof YouTubeApiError) {
+    return error.isRateLimit;
+  }
   const lower = message.toLowerCase();
   const statusMatch = message.match(/\((\d{3})\)/);
   const status = statusMatch ? Number(statusMatch[1]) : null;
@@ -35,7 +40,7 @@ export function formatExternalApiError(
     };
   }
 
-  if (detectRateLimit(message)) {
+  if (detectRateLimit(message, error)) {
     return {
       message: `API rate limit exceeded (${provider})`,
       status: 429,

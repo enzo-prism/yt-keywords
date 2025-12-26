@@ -20,7 +20,7 @@ async function run() {
   let health;
   try {
     health = await fetchJson(`${baseUrl}/api/health`);
-  } catch (error) {
+  } catch {
     throw new Error(
       `Failed to reach ${baseUrl}. Start the dev server before running smoke.`
     );

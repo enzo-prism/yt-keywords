@@ -30,6 +30,10 @@ export class LRUCache<K, V> {
     return entry.value;
   }
 
+  getEntry(key: K): CacheEntry<V> | undefined {
+    return this.map.get(key);
+  }
+
   set(key: K, value: V, ttlMs?: number) {
     const expiresAt = Date.now() + (ttlMs ?? this.ttlMs);
     if (this.map.has(key)) {

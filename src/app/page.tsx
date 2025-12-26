@@ -28,7 +28,7 @@ export default function Home() {
                   hotcontent.app
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Find what's about to blow up. Publish first.
+                  Find what&apos;s about to blow up. Publish first.
                 </p>
               </div>
             </div>
@@ -51,7 +51,7 @@ export default function Home() {
             </Badge>
             <div className="space-y-3">
               <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
-                Publish what's about to blow up.
+                Publish what&apos;s about to blow up.
               </h1>
               <p className="max-w-2xl text-lg text-muted-foreground">
                 HotContent finds rising YouTube searches, weak or outdated results,

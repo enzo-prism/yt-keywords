@@ -15,12 +15,13 @@ import {
   normalizeKeyword,
 } from "@/lib/keywords/normalize";
 import { scoreKeywordOpportunity } from "@/lib/scoring/keywordExplorer";
+import { buildQuotaUser } from "@/lib/quota-user";
 import {
   getChannelProfile,
-  getYouTubeSerp,
+  getYouTubeSerpsBatch,
   resolveChannel,
 } from "@/lib/youtube";
-import type { ChannelProfile, KeywordIdea, OpportunityResult } from "@/lib/types";
+import type { ChannelProfile, KeywordIdea, YouTubeSerp } from "@/lib/types";
 
 export const runtime = "nodejs";
 
@@ -100,11 +101,14 @@ export async function POST(request: Request) {
   const country = parsed.data.country ?? "US";
   const language = parsed.data.language ?? "en";
 
+  let env: ReturnType<typeof getEnv>;
   try {
-    getEnv();
+    env = getEnv();
   } catch (error) {
     return NextResponse.json({ error: formatEnvError(error) }, { status: 500 });
   }
+
+  const quotaUser = buildQuotaUser(request, env.YOUTUBE_API_KEY);
 
   const seed = parsed.data.seed.trim();
   const suggestionLimit = Math.min(Math.max(maxKeywords * 3, 10), 50);
@@ -194,42 +198,25 @@ export async function POST(request: Request) {
 
     let channelProfile: ChannelProfile | null = null;
     if (parsed.data.channel && parsed.data.showWeighted) {
-      const channelId = await resolveChannel(parsed.data.channel);
+      const channelId = await resolveChannel(parsed.data.channel, { quotaUser });
       if (channelId) {
-        channelProfile = await getChannelProfile(channelId);
+        channelProfile = await getChannelProfile(channelId, { quotaUser });
       }
     }
 
-    const limiter = pLimit(CONCURRENCY);
-    let results: OpportunityResult[];
+    let staleUsed = false;
+    let serpMap: Map<string, YouTubeSerp>;
     try {
-      results = await Promise.all(
-        ideasToAnalyze.map((entry) =>
-          limiter(async () => {
-            const serp = await getYouTubeSerp(
-              entry.idea.keyword,
-              videosPerKeyword
-            );
-            const scored = scoreKeywordOpportunity({
-              keyword: entry.idea.keyword,
-              volume: entry.idea.volume,
-              monthlyVolumes: entry.idea.monthlyVolumes ?? null,
-              videos: serp.videos,
-              totalResults: serp.totalResults,
-              minVolume: minVol,
-              maxVolume: maxVol,
-              relatedKeywords: entry.relatedKeywords,
-              channelProfile,
-            });
-
-            return {
-              ...scored,
-              clusterId: entry.clusterId,
-              clusterLabel: entry.clusterLabel,
-              clusterSize: entry.clusterSize,
-            };
-          })
-        )
+      serpMap = await getYouTubeSerpsBatch(
+        ideasToAnalyze.map((entry) => entry.idea.keyword),
+        videosPerKeyword,
+        {
+          quotaUser,
+          allowStaleOnRateLimit: true,
+          onStale: () => {
+            staleUsed = true;
+          },
+        }
       );
     } catch (error) {
       const formatted = formatExternalApiError(error, "google");
@@ -239,9 +226,39 @@ export async function POST(request: Request) {
       );
     }
 
+    const limiter = pLimit(CONCURRENCY);
+    const results = await Promise.all(
+      ideasToAnalyze.map((entry) =>
+        limiter(async () => {
+          const serp = serpMap.get(entry.idea.keyword);
+          if (!serp) {
+            throw new Error("YouTube SERP missing for keyword.");
+          }
+          const scored = scoreKeywordOpportunity({
+            keyword: entry.idea.keyword,
+            volume: entry.idea.volume,
+            monthlyVolumes: entry.idea.monthlyVolumes ?? null,
+            videos: serp.videos,
+            totalResults: serp.totalResults,
+            minVolume: minVol,
+            maxVolume: maxVol,
+            relatedKeywords: entry.relatedKeywords,
+            channelProfile,
+          });
+
+          return {
+            ...scored,
+            clusterId: entry.clusterId,
+            clusterLabel: entry.clusterLabel,
+            clusterSize: entry.clusterSize,
+          };
+        })
+      )
+    );
+
     results.sort((a, b) => b.scores.opportunityScore - a.scores.opportunityScore);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       seed,
       generatedAt: new Date().toISOString(),
       results,
@@ -252,6 +269,12 @@ export async function POST(request: Request) {
         clustered: cluster,
       },
     });
+
+    if (staleUsed) {
+      response.headers.set("X-HotContent-Cache", "STALE_FALLBACK");
+    }
+
+    return response;
   } catch (error) {
     const message = error instanceof Error ? error.message : "Scoring failed.";
     return NextResponse.json({ error: message }, { status: 500 });

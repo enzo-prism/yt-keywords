@@ -58,6 +58,8 @@ type ScoreResponse = {
   };
 };
 
+const EMPTY_RESULTS: OpportunityResult[] = [];
+
 const numberFormatter = new Intl.NumberFormat("en-US");
 
 function formatNumber(value: number) {
@@ -136,7 +138,7 @@ export function ExploreTab() {
   const [selected, setSelected] = useState<OpportunityResult | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
-  const results = data?.results ?? [];
+  const results = data?.results ?? EMPTY_RESULTS;
   const hasResults = results.length > 0;
 
   const displayResults = useMemo(() => {
@@ -176,7 +178,6 @@ export function ExploreTab() {
 
   useEffect(() => {
     fetchConstants();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleAnalyze = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -243,12 +244,6 @@ export function ExploreTab() {
     } catch {
       setCopiedKey(null);
     }
-  };
-
-  const coverageBadgeClass = (label: OpportunityResult["labels"]["coverage"]) => {
-    if (label === "Strong") return "bg-emerald-100 text-emerald-900";
-    if (label === "Medium") return "bg-amber-100 text-amber-900";
-    return "bg-rose-100 text-rose-900";
   };
 
   const freshnessBadgeClass = (label: OpportunityResult["labels"]["freshness"]) => {
@@ -575,7 +570,7 @@ export function ExploreTab() {
           <Alert>
             <AlertTitle>No hot ideas yet.</AlertTitle>
             <AlertDescription>
-              Drop a topic above. We'll scan demand vs. what's ranking and surface what is ripe to win.
+              Drop a topic above. We&apos;ll scan demand vs. what&apos;s ranking and surface what is ripe to win.
             </AlertDescription>
           </Alert>
         )}
