@@ -268,6 +268,12 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
     return "bg-zinc-200 text-zinc-900";
   };
 
+  const opportunityBadgeClass = (score: number) => {
+    if (score >= 70) return "bg-emerald-100 text-emerald-900";
+    if (score >= 45) return "bg-amber-100 text-amber-900";
+    return "bg-rose-100 text-rose-900";
+  };
+
   const difficultyBadgeClass = (
     label: OpportunityResult["labels"]["difficulty"]
   ) => {
@@ -613,11 +619,25 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
                             value={item.scores.opportunityScore}
                             className="h-2 w-24"
                           />
-                          <span className="text-sm font-semibold">
+                          <Badge
+                            variant="secondary"
+                            className={cn(
+                              "border-transparent text-xs",
+                              opportunityBadgeClass(item.scores.opportunityScore)
+                            )}
+                          >
                             {item.scores.opportunityScore}
-                          </span>
+                          </Badge>
                           {showWeighted && item.scores.weightedOpportunityScore !== null && (
-                            <Badge variant="outline">
+                            <Badge
+                              variant="secondary"
+                              className={cn(
+                                "border-transparent text-xs",
+                                opportunityBadgeClass(
+                                  item.scores.weightedOpportunityScore
+                                )
+                              )}
+                            >
                               Weighted {item.scores.weightedOpportunityScore}
                             </Badge>
                           )}
@@ -705,15 +725,39 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
                 {selected?.keyword || "Keyword details"}
               </DrawerTitle>
               <DrawerDescription>
-                {selected
-                  ? `Opportunity ${selected.scores.opportunityScore} · Volume ${formatNumber(
-                      selected.volume
-                    )}${
-                      selected.scores.weightedOpportunityScore !== null && showWeighted
-                        ? ` · Weighted ${selected.scores.weightedOpportunityScore}`
-                        : ""
-                    }`
-                  : "Pick a keyword to inspect the opportunity details."}
+                {selected ? (
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span>Opportunity</span>
+                    <Badge
+                      variant="secondary"
+                      className={cn(
+                        "border-transparent text-xs",
+                        opportunityBadgeClass(selected.scores.opportunityScore)
+                      )}
+                    >
+                      {selected.scores.opportunityScore}
+                    </Badge>
+                    <span>· Volume {formatNumber(selected.volume)}</span>
+                    {selected.scores.weightedOpportunityScore !== null && showWeighted && (
+                      <>
+                        <span>· Weighted</span>
+                        <Badge
+                          variant="secondary"
+                          className={cn(
+                            "border-transparent text-xs",
+                            opportunityBadgeClass(
+                              selected.scores.weightedOpportunityScore
+                            )
+                          )}
+                        >
+                          {selected.scores.weightedOpportunityScore}
+                        </Badge>
+                      </>
+                    )}
+                  </span>
+                ) : (
+                  "Pick a keyword to inspect the opportunity details."
+                )}
               </DrawerDescription>
             </DrawerHeader>
 

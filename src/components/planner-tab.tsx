@@ -44,6 +44,12 @@ const STATUS_OPTIONS: TopicPlanItem["status"][] = [
   "Done",
 ];
 
+const opportunityBadgeClass = (score: number) => {
+  if (score >= 70) return "bg-emerald-100 text-emerald-900";
+  if (score >= 45) return "bg-amber-100 text-amber-900";
+  return "bg-rose-100 text-rose-900";
+};
+
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString();
 }
@@ -315,11 +321,21 @@ export function PlannerTab({
                   <TableCell>{Math.round(item.volume)}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <Badge variant="secondary">
+                      <Badge
+                        variant="secondary"
+                        className={opportunityBadgeClass(
+                          item.scores.opportunityScore
+                        )}
+                      >
                         {item.scores.opportunityScore}
                       </Badge>
                       {item.scores.weightedOpportunityScore !== null && (
-                        <Badge variant="outline">
+                        <Badge
+                          variant="secondary"
+                          className={opportunityBadgeClass(
+                            item.scores.weightedOpportunityScore
+                          )}
+                        >
                           W {item.scores.weightedOpportunityScore}
                         </Badge>
                       )}
