@@ -1,13 +1,13 @@
-# GapScope - YouTube Keyword Gap Finder
+# HotContent - Publish what's about to blow up
 
-GapScope helps YouTubers spot keyword opportunities where demand is high and the
-current YouTube results are weak or aging.
+HotContent helps YouTubers spot rising ideas where demand is high and the
+current YouTube results are weak or outdated.
 
 ## Features
 
 - KeywordTool.io ideas with volume + optional trend momentum
 - YouTube SERP analysis with competition + optimization strength signals
-- Opportunity scoring (0-100) with breakdown (Volume, Competition, Optimization, Freshness)
+- Hot Score (0-100) with breakdown (Volume, Competition, Optimization, Freshness)
 - Weighted scoring (optional) using your channel profile
 - Topic Planner with local persistence and SEO Studio recommendations
 - In-memory cache + optional Vercel KV cache + API rate limiting

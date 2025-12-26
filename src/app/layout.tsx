@@ -16,10 +16,28 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+const siteDescription =
+  "HotContent finds rising YouTube searches, weak or outdated results, and SEO-ready titles so you post before the wave peaks.";
+
 export const metadata: Metadata = {
-  title: "GapScope - YouTube Keyword Gap Finder",
-  description:
-    "Find high-demand YouTube keywords where existing results are weak or aging.",
+  metadataBase: new URL("https://hotcontent.app"),
+  title: {
+    default: "hotcontent.app - Publish what's about to blow up",
+    template: "%s — hotcontent.app",
+  },
+  description: siteDescription,
+  openGraph: {
+    title: "HotContent - Publish what's about to blow up",
+    description: siteDescription,
+    url: "https://hotcontent.app",
+    siteName: "HotContent",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "HotContent - Publish what's about to blow up",
+    description: siteDescription,
+  },
 };
 
 export default function RootLayout({

@@ -217,7 +217,7 @@ export function PlannerTab({
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "gapscope-planner.csv";
+    link.download = "hotcontent-planner.csv";
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -239,9 +239,9 @@ export function PlannerTab({
 
   return (
     <div className="space-y-6">
-      <Card className="border-black/5 bg-white/80 backdrop-blur">
+      <Card className="border-border/60 bg-card/80 backdrop-blur">
         <CardHeader>
-          <CardTitle className="text-lg">Topic Planner</CardTitle>
+          <CardTitle className="text-lg">Planner</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -249,7 +249,7 @@ export function PlannerTab({
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search keyword"
+                placeholder="Search ideas"
                 className="md:max-w-xs"
               />
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -299,7 +299,7 @@ export function PlannerTab({
               <TableRow>
                 <TableHead>Keyword</TableHead>
                 <TableHead>Volume</TableHead>
-                <TableHead>Opportunity</TableHead>
+                <TableHead>Hot Score</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Updated</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -308,14 +308,14 @@ export function PlannerTab({
             <TableBody>
               {filteredItems.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-sm text-zinc-500">
-                    No saved opportunities yet.
+                  <TableCell colSpan={6} className="text-center text-sm text-muted-foreground">
+                    No hot ideas saved yet.
                   </TableCell>
                 </TableRow>
               )}
               {filteredItems.map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell className="font-medium text-zinc-900">
+                  <TableCell className="font-medium text-foreground">
                     {item.keyword}
                   </TableCell>
                   <TableCell>{Math.round(item.volume)}</TableCell>
@@ -387,12 +387,12 @@ export function PlannerTab({
             <DialogHeader>
               <DialogTitle>Edit planner item</DialogTitle>
               <DialogDescription>
-                Update notes, status, and metadata for this keyword.
+                Update notes, status, and metadata for this idea.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-700">Status</label>
+                <label className="text-sm font-medium text-muted-foreground">Status</label>
                 <Select
                   value={editDraft.status}
                   onValueChange={(value) =>
@@ -412,7 +412,7 @@ export function PlannerTab({
                 </Select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-700">
+                <label className="text-sm font-medium text-muted-foreground">
                   Recommended title
                 </label>
                 <Input
@@ -423,7 +423,7 @@ export function PlannerTab({
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-700">
+                <label className="text-sm font-medium text-muted-foreground">
                   Recommended tags
                 </label>
                 <Input
@@ -440,7 +440,7 @@ export function PlannerTab({
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-700">Notes</label>
+                <label className="text-sm font-medium text-muted-foreground">Notes</label>
                 <Textarea
                   value={editDraft.notes}
                   onChange={(event) =>

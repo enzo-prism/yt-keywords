@@ -96,7 +96,7 @@ function Sparkline({ values }: { values: number[] }) {
         fill="none"
         stroke="currentColor"
         strokeWidth="2"
-        className="text-zinc-500"
+        className="text-muted-foreground"
       />
     </svg>
   );
@@ -259,19 +259,41 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
   const freshnessBadgeClass = (label: OpportunityResult["labels"]["freshness"]) => {
     if (label === "Fresh") return "bg-emerald-100 text-emerald-900";
     if (label === "Aging") return "bg-orange-100 text-orange-900";
-    return "bg-zinc-200 text-zinc-900";
+    return "bg-muted text-muted-foreground";
   };
 
   const fitBadgeClass = (label: "Strong" | "Medium" | "Weak") => {
     if (label === "Strong") return "bg-emerald-100 text-emerald-900";
     if (label === "Medium") return "bg-amber-100 text-amber-900";
-    return "bg-zinc-200 text-zinc-900";
+    return "bg-muted text-muted-foreground";
   };
 
   const opportunityBadgeClass = (score: number) => {
     if (score >= 70) return "bg-emerald-100 text-emerald-900";
     if (score >= 45) return "bg-amber-100 text-amber-900";
     return "bg-rose-100 text-rose-900";
+  };
+
+  const heatBadgeForScore = (score: number) => {
+    if (score >= 85) {
+      return {
+        label: "Hot",
+        variant: "secondary",
+        className: "bg-heat text-heat-foreground border-transparent",
+      } as const;
+    }
+    if (score >= 70) {
+      return {
+        label: "Warm",
+        variant: "secondary",
+        className: "border-transparent",
+      } as const;
+    }
+    return {
+      label: "Early",
+      variant: "outline",
+      className: "text-muted-foreground",
+    } as const;
   };
 
   const difficultyBadgeClass = (
@@ -284,19 +306,19 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
 
   return (
     <div className="space-y-10">
-      <Card className="border-black/5 bg-white/80 backdrop-blur">
+      <Card className="border-border/60 bg-card/80 backdrop-blur">
         <CardHeader className="space-y-2">
-          <CardTitle className="text-lg">Keyword gap scan</CardTitle>
+          <CardTitle className="text-lg">Hot idea scan</CardTitle>
           <CardDescription>
-            Analyze high-intent keywords and surface gaps that are underserved or aging.
+            Spot rising searches and surface weak or outdated results worth owning.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form className="flex flex-col gap-6" onSubmit={handleAnalyze}>
             <div className="flex flex-col gap-4 md:flex-row md:items-end">
               <div className="flex-1 space-y-2">
-                <label className="text-sm font-medium text-zinc-700">
-                  Seed keyword
+                <label className="text-sm font-medium text-muted-foreground">
+                  Seed topic
                 </label>
                 <Input
                   value={seed}
@@ -310,15 +332,15 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
                 className="h-12 px-6"
                 disabled={loading || seed.trim().length < 2}
               >
-                {loading ? "Scanning..." : "Find gaps"}
+                {loading ? "Scanning..." : "Find hot ideas"}
               </Button>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-zinc-700">
-                    Keywords to analyze
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Ideas to analyze
                   </span>
                   <Input
                     type="number"
@@ -343,8 +365,8 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
               </div>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-zinc-700">
-                    Videos per keyword
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Videos per idea
                   </span>
                   <Input
                     type="number"
@@ -375,7 +397,7 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
                 <AccordionContent>
                   <div className="grid gap-6 md:grid-cols-2">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-zinc-700">
+                      <label className="text-sm font-medium text-muted-foreground">
                         Country
                       </label>
                       <Select value={country} onValueChange={setCountry}>
@@ -392,7 +414,7 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-zinc-700">
+                      <label className="text-sm font-medium text-muted-foreground">
                         Language
                       </label>
                       <Select value={language} onValueChange={setLanguage}>
@@ -409,8 +431,8 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-zinc-700">
-                        Suggestion mode
+                      <label className="text-sm font-medium text-muted-foreground">
+                        Idea mode
                       </label>
                       <Select
                         value={suggestionMode}
@@ -433,12 +455,12 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
                       </Select>
                       {suggestionMode === "trends" && !constants.trendsEnabled && (
                         <p className="text-xs text-amber-600">
-                          Google Trends suggestions are disabled on this environment.
+                          Trends suggestions are disabled in this environment.
                         </p>
                       )}
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-zinc-700">
+                      <label className="text-sm font-medium text-muted-foreground">
                         Minimum volume
                       </label>
                       <Input
@@ -455,7 +477,7 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-zinc-700">
+                      <label className="text-sm font-medium text-muted-foreground">
                         Include terms
                       </label>
                       <Input
@@ -465,7 +487,7 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-zinc-700">
+                      <label className="text-sm font-medium text-muted-foreground">
                         Exclude terms
                       </label>
                       <Input
@@ -477,10 +499,10 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
                     <div className="space-y-3 md:col-span-2">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm font-medium text-zinc-700">
+                          <p className="text-sm font-medium text-muted-foreground">
                             Hide low-signal autocomplete noise
                           </p>
-                          <p className="text-xs text-zinc-500">
+                          <p className="text-xs text-muted-foreground">
                             Filters single-letter variants around the seed.
                           </p>
                         </div>
@@ -488,10 +510,10 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
                       </div>
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm font-medium text-zinc-700">
+                          <p className="text-sm font-medium text-muted-foreground">
                             Cluster similar keywords
                           </p>
-                          <p className="text-xs text-zinc-500">
+                          <p className="text-xs text-muted-foreground">
                             Collapse variants into a single opportunity.
                           </p>
                         </div>
@@ -499,11 +521,11 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
                       </div>
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm font-medium text-zinc-700">
+                          <p className="text-sm font-medium text-muted-foreground">
                             Show weighted score
                           </p>
-                          <p className="text-xs text-zinc-500">
-                            Adjust opportunity by your channel profile.
+                          <p className="text-xs text-muted-foreground">
+                            Adjust Hot Score by your channel profile.
                           </p>
                         </div>
                         <Switch
@@ -512,7 +534,7 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-zinc-700">
+                        <label className="text-sm font-medium text-muted-foreground">
                           My channel (optional)
                         </label>
                         <Input
@@ -533,15 +555,15 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-zinc-900">
-              Opportunity results
+            <h2 className="text-xl font-semibold text-foreground">
+              Hot opportunities
             </h2>
-            <p className="text-sm text-zinc-600">
-              Ranked by gap score (0-100).
+            <p className="text-sm text-muted-foreground">
+              Higher Hot Score = higher demand + weaker/outdated SERP + better chance to win.
             </p>
           </div>
           {data?.generatedAt && (
-            <span className="text-xs text-zinc-500">
+            <span className="text-xs text-muted-foreground">
               Updated {new Date(data.generatedAt).toLocaleTimeString()}
             </span>
           )}
@@ -556,9 +578,9 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
 
         {!loading && !error && !hasResults && (
           <Alert>
-            <AlertTitle>No results yet</AlertTitle>
+            <AlertTitle>No hot ideas yet.</AlertTitle>
             <AlertDescription>
-              Enter a seed keyword to see ranked opportunities.
+              Drop a topic above. We'll scan demand vs. what's ranking and surface what is ripe to win.
             </AlertDescription>
           </Alert>
         )}
@@ -588,7 +610,7 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
                   <TableRow>
                     <TableHead>Keyword</TableHead>
                     <TableHead>Volume</TableHead>
-                    <TableHead>Opportunity</TableHead>
+                    <TableHead>Hot Score</TableHead>
                     <TableHead>Breakdown</TableHead>
                     <TableHead>Difficulty</TableHead>
                     <TableHead>Best answer age</TableHead>
@@ -596,120 +618,131 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {displayResults.map((item) => (
-                    <TableRow
-                      key={item.keyword}
-                      className="cursor-pointer transition hover:bg-muted/40"
-                      onClick={() => handleOpenDrawer(item)}
-                    >
-                      <TableCell className="font-medium text-zinc-900">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span>{item.keyword}</span>
-                          {item.clusterSize && item.clusterSize > 1 && (
-                            <Badge variant="secondary">
-                              {item.clusterSize} variants
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>{formatNumber(item.volume)}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Progress
-                            value={item.scores.opportunityScore}
-                            className="h-2 w-24"
-                          />
-                          <Badge
-                            variant="secondary"
-                            className={cn(
-                              "border-transparent text-xs",
-                              opportunityBadgeClass(item.scores.opportunityScore)
+                  {displayResults.map((item) => {
+                    const heatBadge = heatBadgeForScore(
+                      item.scores.opportunityScore
+                    );
+                    return (
+                      <TableRow
+                        key={item.keyword}
+                        className="cursor-pointer transition hover:bg-muted/40"
+                        onClick={() => handleOpenDrawer(item)}
+                      >
+                        <TableCell className="font-medium text-foreground">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span>{item.keyword}</span>
+                            {item.clusterSize && item.clusterSize > 1 && (
+                              <Badge variant="secondary">
+                                {item.clusterSize} variants
+                              </Badge>
                             )}
-                          >
-                            {item.scores.opportunityScore}
-                          </Badge>
-                          {showWeighted && item.scores.weightedOpportunityScore !== null && (
+                          </div>
+                        </TableCell>
+                        <TableCell>{formatNumber(item.volume)}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <Progress
+                              value={item.scores.opportunityScore}
+                              className="h-2 w-24"
+                            />
                             <Badge
                               variant="secondary"
                               className={cn(
                                 "border-transparent text-xs",
-                                opportunityBadgeClass(
-                                  item.scores.weightedOpportunityScore
-                                )
+                                opportunityBadgeClass(item.scores.opportunityScore)
                               )}
                             >
-                              Weighted {item.scores.weightedOpportunityScore}
+                              {item.scores.opportunityScore}
                             </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-2">
-                          {scoreBadge(item.scores.searchVolumeScore, "Vol")}
-                          {scoreBadge(item.scores.competitionScore, "Comp")}
-                          {scoreBadge(item.scores.optimizationStrengthScore, "Opt")}
-                          {scoreBadge(item.scores.freshnessScore, "Fresh")}
-                          {item.scores.trendScore !== null &&
-                            scoreBadge(item.scores.trendScore, "Trend")}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{item.scores.difficulty}</span>
-                          <Badge
-                            variant="secondary"
-                            className={cn(
-                              "border-transparent",
-                              difficultyBadgeClass(item.labels.difficulty)
+                            <Badge
+                              variant={heatBadge.variant}
+                              className={cn("text-xs", heatBadge.className)}
+                            >
+                              {heatBadge.label}
+                            </Badge>
+                            {showWeighted && item.scores.weightedOpportunityScore !== null && (
+                              <Badge
+                                variant="secondary"
+                                className={cn(
+                                  "border-transparent text-xs",
+                                  opportunityBadgeClass(
+                                    item.scores.weightedOpportunityScore
+                                  )
+                                )}
+                              >
+                                Weighted {item.scores.weightedOpportunityScore}
+                              </Badge>
                             )}
-                          >
-                            {item.labels.difficulty}
-                          </Badge>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">
-                            {Math.round(item.bestAnswerAgeDays)}d
-                          </span>
-                          <Badge
-                            variant="secondary"
-                            className={cn(
-                              "border-transparent",
-                              freshnessBadgeClass(item.labels.freshness)
-                            )}
-                          >
-                            {item.labels.freshness}
-                          </Badge>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              handleOpenDrawer(item);
-                            }}
-                          >
-                            View
-                          </Button>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              onSave(item);
-                            }}
-                            disabled={savedKeywords.has(item.keyword.toLowerCase())}
-                          >
-                            {savedKeywords.has(item.keyword.toLowerCase()) ? "Saved" : "Save"}
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-2">
+                            {scoreBadge(item.scores.searchVolumeScore, "Vol")}
+                            {scoreBadge(item.scores.competitionScore, "Comp")}
+                            {scoreBadge(item.scores.optimizationStrengthScore, "Opt")}
+                            {scoreBadge(item.scores.freshnessScore, "Fresh")}
+                            {item.scores.trendScore !== null &&
+                              scoreBadge(item.scores.trendScore, "Trend")}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{item.scores.difficulty}</span>
+                            <Badge
+                              variant="secondary"
+                              className={cn(
+                                "border-transparent",
+                                difficultyBadgeClass(item.labels.difficulty)
+                              )}
+                            >
+                              {item.labels.difficulty}
+                            </Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">
+                              {Math.round(item.bestAnswerAgeDays)}d
+                            </span>
+                            <Badge
+                              variant="secondary"
+                              className={cn(
+                                "border-transparent",
+                                freshnessBadgeClass(item.labels.freshness)
+                              )}
+                            >
+                              {item.labels.freshness}
+                            </Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                handleOpenDrawer(item);
+                              }}
+                            >
+                              View
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                onSave(item);
+                              }}
+                              disabled={savedKeywords.has(item.keyword.toLowerCase())}
+                            >
+                              {savedKeywords.has(item.keyword.toLowerCase()) ? "Saved" : "Save"}
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </CardContent>
@@ -718,16 +751,22 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
       </section>
 
       <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
-        <DrawerContent className="bg-white/95 overflow-hidden">
+        <DrawerContent className="bg-background/95 overflow-hidden">
           <div className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col">
-            <DrawerHeader className="shrink-0">
+            <DrawerHeader className="shrink-0 gap-2">
+              <Badge
+                variant="secondary"
+                className="w-fit border-transparent bg-heat text-heat-foreground"
+              >
+                Hot idea breakdown
+              </Badge>
               <DrawerTitle className="text-2xl">
-                {selected?.keyword || "Keyword details"}
+                {selected?.keyword || "Hot idea breakdown"}
               </DrawerTitle>
               <DrawerDescription>
                 {selected ? (
                   <span className="flex flex-wrap items-center gap-2">
-                    <span>Opportunity</span>
+                    <span>Hot Score</span>
                     <Badge
                       variant="secondary"
                       className={cn(
@@ -756,7 +795,7 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
                     )}
                   </span>
                 ) : (
-                  "Pick a keyword to inspect the opportunity details."
+                  "Pick a topic to inspect the hot idea breakdown."
                 )}
               </DrawerDescription>
             </DrawerHeader>
@@ -779,8 +818,52 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
 
               {selected && (
                 <div className="space-y-8">
+                  {selectedSeo && (
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() =>
+                          handleCopy(
+                            "quick-title",
+                            selectedSeo.titleTemplates[0] ?? selected.keyword
+                          )
+                        }
+                      >
+                        {copiedKey === "quick-title" ? (
+                          <>
+                            <Check className="mr-2 h-4 w-4" /> Copied title
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="mr-2 h-4 w-4" /> Copy title
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() =>
+                          handleCopy(
+                            "quick-tags",
+                            selectedSeo.suggestedTags.join(", ")
+                          )
+                        }
+                      >
+                        {copiedKey === "quick-tags" ? (
+                          <>
+                            <Check className="mr-2 h-4 w-4" /> Copied tags
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="mr-2 h-4 w-4" /> Copy tags
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  )}
                   <div className="grid gap-4 md:grid-cols-4">
-                    <Card className="border-black/5">
+                    <Card className="border-border/60">
                       <CardHeader>
                       <CardDescription>Volume</CardDescription>
                       <CardTitle className="text-2xl">
@@ -788,7 +871,7 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
                       </CardTitle>
                     </CardHeader>
                   </Card>
-                  <Card className="border-black/5">
+                  <Card className="border-border/60">
                     <CardHeader>
                       <CardDescription>Competition</CardDescription>
                       <CardTitle className="text-2xl">
@@ -796,7 +879,7 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
                       </CardTitle>
                     </CardHeader>
                   </Card>
-                  <Card className="border-black/5">
+                  <Card className="border-border/60">
                     <CardHeader>
                       <CardDescription>Optimization</CardDescription>
                       <CardTitle className="text-2xl">
@@ -804,7 +887,7 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
                       </CardTitle>
                     </CardHeader>
                   </Card>
-                  <Card className="border-black/5">
+                  <Card className="border-border/60">
                     <CardHeader>
                       <CardDescription>Freshness</CardDescription>
                       <CardTitle className="text-2xl">
@@ -814,91 +897,117 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
                   </Card>
                 </div>
 
-                <Card className="border-black/5">
+                <Card className="border-border/60">
                   <CardHeader>
-                    <CardTitle className="text-lg">Score analysis</CardTitle>
+                    <CardTitle className="text-lg">Hot score breakdown</CardTitle>
                     <CardDescription>
-                      How the opportunity score is built.
+                      The signals that power the Hot Score.
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm font-medium">
-                        <span>Search volume</span>
-                        <span>{selected.scores.searchVolumeScore}/100</span>
-                      </div>
-                      <Progress value={selected.scores.searchVolumeScore} className="h-2" />
-                      <ul className="list-disc space-y-1 pl-5 text-xs text-zinc-600">
-                        {selected.explanations.searchVolume.map((bullet) => (
-                          <li key={bullet}>{bullet}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm font-medium">
-                        <span>Competition (ease)</span>
-                        <span>{selected.scores.competitionScore}/100</span>
-                      </div>
-                      <Progress value={selected.scores.competitionScore} className="h-2" />
-                      <ul className="list-disc space-y-1 pl-5 text-xs text-zinc-600">
-                        {selected.explanations.competition.map((bullet) => (
-                          <li key={bullet}>{bullet}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm font-medium">
-                        <span>Optimization strength</span>
-                        <span>{selected.scores.optimizationStrengthScore}/100</span>
-                      </div>
-                      <Progress value={selected.scores.optimizationStrengthScore} className="h-2" />
-                      <ul className="list-disc space-y-1 pl-5 text-xs text-zinc-600">
-                        {selected.explanations.optimization.map((bullet) => (
-                          <li key={bullet}>{bullet}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm font-medium">
-                        <span>Freshness</span>
-                        <span>{selected.scores.freshnessScore}/100</span>
-                      </div>
-                      <Progress value={selected.scores.freshnessScore} className="h-2" />
-                      <ul className="list-disc space-y-1 pl-5 text-xs text-zinc-600">
-                        {selected.explanations.freshness.map((bullet) => (
-                          <li key={bullet}>{bullet}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    {selected.scores.trendScore !== null && selected.explanations.trend && (
-                      <div className="space-y-2">
+                  <CardContent className="grid gap-4 md:grid-cols-2">
+                    <Card className="border-border/60">
+                      <CardContent className="space-y-2 p-4">
                         <div className="flex items-center justify-between text-sm font-medium">
-                          <span>Trend momentum</span>
-                          <span>{selected.scores.trendScore}/100</span>
+                          <span>Search volume</span>
+                          <span>{selected.scores.searchVolumeScore}/100</span>
                         </div>
-                        {selected.monthlyVolumes && selected.monthlyVolumes.length >= 6 && (
-                          <Sparkline values={selected.monthlyVolumes} />
-                        )}
-                        <Progress value={selected.scores.trendScore} className="h-2" />
-                        <ul className="list-disc space-y-1 pl-5 text-xs text-zinc-600">
-                          {selected.explanations.trend.map((bullet) => (
+                        <Progress
+                          value={selected.scores.searchVolumeScore}
+                          className="h-2"
+                        />
+                        <ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">
+                          {selected.explanations.searchVolume.map((bullet) => (
                             <li key={bullet}>{bullet}</li>
                           ))}
                         </ul>
-                      </div>
+                      </CardContent>
+                    </Card>
+                    <Card className="border-border/60">
+                      <CardContent className="space-y-2 p-4">
+                        <div className="flex items-center justify-between text-sm font-medium">
+                          <span>Competition (ease)</span>
+                          <span>{selected.scores.competitionScore}/100</span>
+                        </div>
+                        <Progress
+                          value={selected.scores.competitionScore}
+                          className="h-2"
+                        />
+                        <ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">
+                          {selected.explanations.competition.map((bullet) => (
+                            <li key={bullet}>{bullet}</li>
+                          ))}
+                        </ul>
+                      </CardContent>
+                    </Card>
+                    <Card className="border-border/60">
+                      <CardContent className="space-y-2 p-4">
+                        <div className="flex items-center justify-between text-sm font-medium">
+                          <span>Optimization strength</span>
+                          <span>{selected.scores.optimizationStrengthScore}/100</span>
+                        </div>
+                        <Progress
+                          value={selected.scores.optimizationStrengthScore}
+                          className="h-2"
+                        />
+                        <ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">
+                          {selected.explanations.optimization.map((bullet) => (
+                            <li key={bullet}>{bullet}</li>
+                          ))}
+                        </ul>
+                      </CardContent>
+                    </Card>
+                    <Card className="border-border/60">
+                      <CardContent className="space-y-2 p-4">
+                        <div className="flex items-center justify-between text-sm font-medium">
+                          <span>Freshness</span>
+                          <span>{selected.scores.freshnessScore}/100</span>
+                        </div>
+                        <Progress
+                          value={selected.scores.freshnessScore}
+                          className="h-2"
+                        />
+                        <ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">
+                          {selected.explanations.freshness.map((bullet) => (
+                            <li key={bullet}>{bullet}</li>
+                          ))}
+                        </ul>
+                      </CardContent>
+                    </Card>
+                    {selected.scores.trendScore !== null && selected.explanations.trend && (
+                      <Card className="border-border/60 md:col-span-2">
+                        <CardContent className="space-y-2 p-4">
+                          <div className="flex items-center justify-between text-sm font-medium">
+                            <span>Trend momentum</span>
+                            <span>{selected.scores.trendScore}/100</span>
+                          </div>
+                          {selected.monthlyVolumes &&
+                            selected.monthlyVolumes.length >= 6 && (
+                              <Sparkline values={selected.monthlyVolumes} />
+                            )}
+                          <Progress
+                            value={selected.scores.trendScore}
+                            className="h-2"
+                          />
+                          <ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">
+                            {selected.explanations.trend.map((bullet) => (
+                              <li key={bullet}>{bullet}</li>
+                            ))}
+                          </ul>
+                        </CardContent>
+                      </Card>
                     )}
                   </CardContent>
                 </Card>
 
-                <Card className="border-black/5">
+                <Card className="border-border/60">
                   <CardHeader>
-                    <CardTitle className="text-lg">SERP weakness summary</CardTitle>
+                    <CardTitle className="text-lg">Why this can win</CardTitle>
                     <CardDescription>
-                      Signals that suggest a content gap.
+                      Gaps in the current SERP that you can outrun.
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <ul className="list-disc space-y-2 pl-5 text-sm text-zinc-700">
+                    <ul className="list-disc space-y-2 pl-5 text-sm text-muted-foreground">
                       {selected.explanations.serpWeakness.map((bullet) => (
                         <li key={bullet}>{bullet}</li>
                       ))}
@@ -908,16 +1017,16 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
 
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-zinc-900">
-                      Top competing videos
+                    <h3 className="text-lg font-semibold text-foreground">
+                      Current top videos
                     </h3>
-                    <p className="text-sm text-zinc-600">
-                      The current YouTube results for this keyword.
+                    <p className="text-sm text-muted-foreground">
+                      The results you are up against for this idea.
                     </p>
                   </div>
                   <div className="grid gap-4">
                     {selected.topVideos.slice(0, 10).map((video) => (
-                      <Card key={video.id} className="border-black/5">
+                      <Card key={video.id} className="border-border/60">
                         <CardContent className="flex flex-col gap-4 p-4 md:flex-row">
                           <img
                             src={video.thumbnailUrl}
@@ -930,7 +1039,7 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
                                 href={video.url}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-base font-semibold text-zinc-900 hover:underline"
+                                className="text-base font-semibold text-foreground hover:underline"
                               >
                                 {video.title}
                               </a>
@@ -943,11 +1052,11 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
                                 {video.fitLabel} fit
                               </Badge>
                             </div>
-                            <p className="text-sm text-zinc-600">
+                            <p className="text-sm text-muted-foreground">
                               {video.channelTitle} ·{" "}
                               {new Date(video.publishedAt).toLocaleDateString()}
                             </p>
-                            <div className="flex flex-wrap gap-2 text-xs text-zinc-600">
+                            <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                               <Badge variant="outline">
                                 {formatNumber(video.viewCount)} views
                               </Badge>
@@ -968,7 +1077,7 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
                                 </Badge>
                               )}
                             </div>
-                            <p className="text-xs text-zinc-500">
+                            <p className="text-xs text-muted-foreground">
                               Fit {Math.round(video.fit * 100)}% · {video.durationSeconds}s
                             </p>
                           </div>
@@ -979,7 +1088,7 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
                 </div>
 
                 {selectedSeo && (
-                  <Card className="border-black/5">
+                  <Card className="border-border/60">
                     <CardHeader>
                       <CardTitle className="text-lg">Recommended angles</CardTitle>
                       <CardDescription>
@@ -987,7 +1096,7 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <ul className="list-disc space-y-2 pl-5 text-sm text-zinc-700">
+                      <ul className="list-disc space-y-2 pl-5 text-sm text-muted-foreground">
                         {selectedSeo.angles.map((angle) => (
                           <li key={angle}>{angle}</li>
                         ))}
@@ -997,19 +1106,19 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
                 )}
 
                 {selectedSeo && (
-                  <Card className="border-black/5">
+                  <Card className="border-border/60">
                     <CardHeader>
-                      <CardTitle className="text-lg">SEO Studio</CardTitle>
+                      <CardTitle className="text-lg">Viral SEO Studio</CardTitle>
                       <CardDescription>
-                        Actionable metadata recommendations you can copy instantly.
+                        Fast metadata you can copy before the wave crests.
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
                       <div className="space-y-2">
-                        <h4 className="text-sm font-semibold text-zinc-900">
+                        <h4 className="text-sm font-semibold text-foreground">
                           Checklist
                         </h4>
-                        <ul className="list-disc space-y-1 pl-5 text-sm text-zinc-700">
+                        <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
                           <li>Put the exact keyword in the first 60 characters.</li>
                           <li>Use the exact keyword in the first 200 characters.</li>
                           <li>Include 3–5 close variants in the description.</li>
@@ -1018,16 +1127,16 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
                       </div>
 
                       <div className="space-y-2">
-                        <h4 className="text-sm font-semibold text-zinc-900">
+                        <h4 className="text-sm font-semibold text-foreground">
                           Title templates
                         </h4>
                         <div className="space-y-2">
                           {selectedSeo.titleTemplates.map((title, index) => (
                             <div
                               key={`${title}-${index}`}
-                              className="flex flex-col gap-2 rounded-md border border-black/10 bg-white px-3 py-2 md:flex-row md:items-center md:justify-between"
+                              className="flex flex-col gap-2 rounded-md border border-border/60 bg-card px-3 py-2 md:flex-row md:items-center md:justify-between"
                             >
-                              <span className="text-sm text-zinc-800">{title}</span>
+                              <span className="text-sm text-foreground">{title}</span>
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -1045,10 +1154,10 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
                       </div>
 
                       <div className="space-y-2">
-                        <h4 className="text-sm font-semibold text-zinc-900">
+                        <h4 className="text-sm font-semibold text-foreground">
                           Description starter
                         </h4>
-                        <div className="rounded-md border border-black/10 bg-white p-3 text-sm text-zinc-700">
+                        <div className="rounded-md border border-border/60 bg-card p-3 text-sm text-muted-foreground">
                           <pre className="whitespace-pre-wrap font-sans">
                             {selectedSeo.descriptionTemplate}
                           </pre>
@@ -1074,7 +1183,7 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
 
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                          <h4 className="text-sm font-semibold text-zinc-900">
+                          <h4 className="text-sm font-semibold text-foreground">
                             Suggested tags
                           </h4>
                           <Button
