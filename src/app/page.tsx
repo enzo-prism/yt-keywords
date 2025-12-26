@@ -40,19 +40,12 @@ export default function Home() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-            <Badge
-              variant="secondary"
-              className="border-transparent bg-heat/15 text-heat"
-            >
-              No sign-in required
-            </Badge>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setActiveTab("planner")}
+              <Badge
+                variant="secondary"
+                className="border-transparent bg-heat/15 text-heat"
               >
-                Planner
-              </Button>
+                No sign-in required
+              </Badge>
             </div>
           </div>
 
