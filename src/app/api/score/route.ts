@@ -138,13 +138,15 @@ export async function POST(request: Request) {
       filtered.map((idea) => [normalizeKeyword(idea.keyword), idea])
     );
 
-    const clusterRepresentatives: Array<{
+    type AnalysisEntry = {
       idea: KeywordIdea;
       relatedKeywords: string[];
       clusterId?: string;
       clusterLabel?: string;
       clusterSize?: number;
-    }> = [];
+    };
+
+    const clusterRepresentatives: AnalysisEntry[] = [];
 
     if (clusterResult) {
       for (const entry of clusterResult.clusters) {
@@ -166,7 +168,7 @@ export async function POST(request: Request) {
       }
     }
 
-    const ideasToAnalyze = (clusterResult
+    const ideasToAnalyze: AnalysisEntry[] = (clusterResult
       ? clusterRepresentatives
       : filtered
           .sort((a, b) => b.volume - a.volume)
