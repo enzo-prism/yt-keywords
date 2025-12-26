@@ -66,6 +66,7 @@ const videosSchema = z
                 channelTitle: z.string(),
                 thumbnails: z
                   .record(
+                    z.string(),
                     z.object({
                       url: z.string().optional(),
                     })
