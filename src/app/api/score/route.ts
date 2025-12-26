@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import pLimit from "p-limit";
 import { z } from "zod";
 
-import { getKeywordIdeas } from "@/lib/keywordtool";
+import { getEnv } from "@/lib/env";
+import { getYouTubeKeywordIdeasWithVolume } from "@/lib/keywordtool";
 import { scoreOpportunity } from "@/lib/scoring/opportunity";
 import { getYouTubeVideos } from "@/lib/youtube";
 import type { OpportunityResult } from "@/lib/types";
@@ -36,7 +37,19 @@ export async function POST(request: Request) {
   const { seed, limitKeywords, maxVideos } = parsed.data;
 
   try {
-    const ideas = await getKeywordIdeas(seed, limitKeywords);
+    getEnv();
+  } catch {
+    return NextResponse.json(
+      { error: "Server misconfigured." },
+      { status: 500 }
+    );
+  }
+
+  try {
+    const ideas = await getYouTubeKeywordIdeasWithVolume({
+      seed,
+      limit: limitKeywords,
+    });
     const volumes = ideas.map((idea) => idea.volume);
     const minVolume = volumes.length ? Math.min(...volumes) : 0;
     const maxVolume = volumes.length ? Math.max(...volumes) : 0;

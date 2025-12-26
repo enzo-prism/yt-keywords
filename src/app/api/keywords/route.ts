@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getKeywordIdeas } from "@/lib/keywordtool";
+import { getEnv } from "@/lib/env";
+import { getYouTubeKeywordIdeasWithVolume } from "@/lib/keywordtool";
 
 export const runtime = "nodejs";
 
@@ -27,7 +28,19 @@ export async function POST(request: Request) {
   }
 
   try {
-    const ideas = await getKeywordIdeas(parsed.data.seed, parsed.data.limit);
+    getEnv();
+  } catch {
+    return NextResponse.json(
+      { error: "Server misconfigured." },
+      { status: 500 }
+    );
+  }
+
+  try {
+    const ideas = await getYouTubeKeywordIdeasWithVolume({
+      seed: parsed.data.seed,
+      limit: parsed.data.limit,
+    });
     return NextResponse.json(ideas);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Keyword API failed.";

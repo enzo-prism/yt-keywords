@@ -28,6 +28,7 @@ Create a `.env.local` file with the following environment variables:
 ```bash
 KEYWORDTOOL_API_KEY=your_key_here
 YOUTUBE_API_KEY=your_key_here
+# Optional (defaults to http://localhost:3000)
 APP_URL=http://localhost:3000
 ```
 
@@ -37,11 +38,32 @@ Run the app locally:
 pnpm dev
 ```
 
+Run the local smoke test (hits KeywordTool + YouTube):
+
+```bash
+pnpm smoke
+```
+
 ## API routes
 
 - `POST /api/keywords` - `{ seed, limit }` -> `[{ keyword, volume }]`
 - `POST /api/youtube` - `{ keyword, maxVideos }` -> normalized videos list
 - `POST /api/score` - `{ seed, limitKeywords, maxVideos }` -> ranked results
+- `GET /api/health` - configuration status
+
+Example requests:
+
+```bash
+curl -X POST http://localhost:3000/api/keywords \
+  -H "Content-Type: application/json" \
+  -d '{"seed":"how to edit videos","limit":5}'
+```
+
+```bash
+curl -X POST http://localhost:3000/api/score \
+  -H "Content-Type: application/json" \
+  -d '{"seed":"how to edit videos","limitKeywords":5,"maxVideos":5}'
+```
 
 ## Scoring model
 

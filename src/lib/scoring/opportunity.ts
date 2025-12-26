@@ -1,6 +1,6 @@
-import { fitScore } from "@/lib/scoring/fit";
-import { tokenize } from "@/lib/scoring/tokenize";
-import type { OpportunityResult, ScoredVideo, YouTubeVideo } from "@/lib/types";
+import { fitScore } from "./fit.ts";
+import { tokenize } from "./tokenize.ts";
+import type { OpportunityResult, ScoredVideo, YouTubeVideo } from "../types.ts";
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));

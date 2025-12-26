@@ -1,8 +1,9 @@
 import { z } from "zod";
 
-import { youtubeCache } from "@/lib/cache";
-import { fetchJson } from "@/lib/http";
-import type { YouTubeVideo } from "@/lib/types";
+import { youtubeCache } from "./cache/index.ts";
+import { getEnv } from "./env.ts";
+import { fetchJson } from "./http.ts";
+import type { YouTubeVideo } from "./types.ts";
 
 const SEARCH_ENDPOINT = "https://www.googleapis.com/youtube/v3/search";
 const VIDEOS_ENDPOINT = "https://www.googleapis.com/youtube/v3/videos";
@@ -59,23 +60,25 @@ export async function getYouTubeVideos(
   const cached = youtubeCache.get(cacheKey);
   if (cached) return cached;
 
-  const apiKey = process.env.YOUTUBE_API_KEY;
-  if (!apiKey) {
-    throw new Error("Missing YOUTUBE_API_KEY env var.");
-  }
+  const env = getEnv();
+  const apiKey = env.YOUTUBE_API_KEY;
 
   const searchUrl = new URL(SEARCH_ENDPOINT);
-  searchUrl.searchParams.set("key", apiKey);
-  searchUrl.searchParams.set("part", "id");
+  searchUrl.searchParams.set("part", "snippet");
   searchUrl.searchParams.set("type", "video");
   searchUrl.searchParams.set("q", normalizedKeyword);
   searchUrl.searchParams.set("order", "relevance");
   searchUrl.searchParams.set("maxResults", String(maxVideos));
 
-  const searchData = await fetchJson<unknown>(searchUrl.toString(), undefined, {
-    timeoutMs: 12000,
-    retry: 1,
-  });
+  const searchData = await fetchJson<unknown>(
+    searchUrl.toString(),
+    {
+      headers: {
+        "X-Goog-Api-Key": apiKey,
+      },
+    },
+    { timeoutMs: 12000, retry: 1 }
+  );
   const searchParsed = searchSchema.safeParse(searchData);
 
   if (!searchParsed.success) {
@@ -92,14 +95,18 @@ export async function getYouTubeVideos(
   }
 
   const videosUrl = new URL(VIDEOS_ENDPOINT);
-  videosUrl.searchParams.set("key", apiKey);
   videosUrl.searchParams.set("part", "snippet,statistics");
   videosUrl.searchParams.set("id", ids.join(","));
 
-  const videosData = await fetchJson<unknown>(videosUrl.toString(), undefined, {
-    timeoutMs: 12000,
-    retry: 1,
-  });
+  const videosData = await fetchJson<unknown>(
+    videosUrl.toString(),
+    {
+      headers: {
+        "X-Goog-Api-Key": apiKey,
+      },
+    },
+    { timeoutMs: 12000, retry: 1 }
+  );
   const videosParsed = videosSchema.safeParse(videosData);
 
   if (!videosParsed.success) {

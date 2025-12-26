@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { getEnv } from "@/lib/env";
 import { getYouTubeVideos } from "@/lib/youtube";
 
 export const runtime = "nodejs";
@@ -23,6 +24,15 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: "Invalid request payload." },
       { status: 400 }
+    );
+  }
+
+  try {
+    getEnv();
+  } catch {
+    return NextResponse.json(
+      { error: "Server misconfigured." },
+      { status: 500 }
     );
   }
 

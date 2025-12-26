@@ -1,4 +1,4 @@
-import { overlapRatio } from "@/lib/scoring/tokenize";
+import { overlapRatio } from "./tokenize.ts";
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
