@@ -3,6 +3,7 @@ import pLimit from "p-limit";
 import { z } from "zod";
 
 import { formatEnvError, getEnv } from "@/lib/env";
+import { formatExternalApiError } from "@/lib/api-errors";
 import {
   getYouTubeKeywordIdeasWithVolume,
   type SuggestionMode,
@@ -105,17 +106,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: formatEnvError(error) }, { status: 500 });
   }
 
+  const seed = parsed.data.seed.trim();
+  const suggestionLimit = Math.min(Math.max(maxKeywords * 3, 10), 50);
+
+  let ideas: KeywordIdea[];
   try {
-    const seed = parsed.data.seed.trim();
-    const suggestionLimit = Math.min(Math.max(maxKeywords * 3, 10), 50);
-    const ideas = await getYouTubeKeywordIdeasWithVolume({
+    ideas = await getYouTubeKeywordIdeasWithVolume({
       seed,
       limit: suggestionLimit,
       country,
       language,
       suggestionMode,
     });
+  } catch (error) {
+    const formatted = formatExternalApiError(error, "keyword tool");
+    return NextResponse.json(
+      { error: formatted.message },
+      { status: formatted.status }
+    );
+  }
 
+  try {
     const filtered = dedupeIdeas(
       ideas.filter((idea) => {
         if (idea.volume < minVolume) return false;
@@ -190,31 +201,43 @@ export async function POST(request: Request) {
     }
 
     const limiter = pLimit(CONCURRENCY);
-    const results: OpportunityResult[] = await Promise.all(
-      ideasToAnalyze.map((entry) =>
-        limiter(async () => {
-          const serp = await getYouTubeSerp(entry.idea.keyword, videosPerKeyword);
-          const scored = scoreKeywordOpportunity({
-            keyword: entry.idea.keyword,
-            volume: entry.idea.volume,
-            monthlyVolumes: entry.idea.monthlyVolumes ?? null,
-            videos: serp.videos,
-            totalResults: serp.totalResults,
-            minVolume: minVol,
-            maxVolume: maxVol,
-            relatedKeywords: entry.relatedKeywords,
-            channelProfile,
-          });
+    let results: OpportunityResult[];
+    try {
+      results = await Promise.all(
+        ideasToAnalyze.map((entry) =>
+          limiter(async () => {
+            const serp = await getYouTubeSerp(
+              entry.idea.keyword,
+              videosPerKeyword
+            );
+            const scored = scoreKeywordOpportunity({
+              keyword: entry.idea.keyword,
+              volume: entry.idea.volume,
+              monthlyVolumes: entry.idea.monthlyVolumes ?? null,
+              videos: serp.videos,
+              totalResults: serp.totalResults,
+              minVolume: minVol,
+              maxVolume: maxVol,
+              relatedKeywords: entry.relatedKeywords,
+              channelProfile,
+            });
 
-          return {
-            ...scored,
-            clusterId: entry.clusterId,
-            clusterLabel: entry.clusterLabel,
-            clusterSize: entry.clusterSize,
-          };
-        })
-      )
-    );
+            return {
+              ...scored,
+              clusterId: entry.clusterId,
+              clusterLabel: entry.clusterLabel,
+              clusterSize: entry.clusterSize,
+            };
+          })
+        )
+      );
+    } catch (error) {
+      const formatted = formatExternalApiError(error, "google");
+      return NextResponse.json(
+        { error: formatted.message },
+        { status: formatted.status }
+      );
+    }
 
     results.sort((a, b) => b.scores.opportunityScore - a.scores.opportunityScore);
 
@@ -231,7 +254,6 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Scoring failed.";
-    const status = message.includes("disabled") ? 400 : 500;
-    return NextResponse.json({ error: message }, { status });
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -6,6 +6,7 @@ import {
   getYouTubeKeywordIdeasWithVolume,
   type SuggestionMode,
 } from "@/lib/keywordtool";
+import { formatExternalApiError } from "@/lib/api-errors";
 
 export const runtime = "nodejs";
 
@@ -54,8 +55,10 @@ export async function POST(request: Request) {
     });
     return NextResponse.json(ideas);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Keyword API failed.";
-    const status = message.includes("disabled") ? 400 : 500;
-    return NextResponse.json({ error: message }, { status });
+    const formatted = formatExternalApiError(error, "keyword tool");
+    return NextResponse.json(
+      { error: formatted.message },
+      { status: formatted.status }
+    );
   }
 }

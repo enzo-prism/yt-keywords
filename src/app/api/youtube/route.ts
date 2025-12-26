@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { formatEnvError, getEnv } from "@/lib/env";
+import { formatExternalApiError } from "@/lib/api-errors";
 import { getYouTubeSerp } from "@/lib/youtube";
 
 export const runtime = "nodejs";
@@ -40,7 +41,10 @@ export async function POST(request: Request) {
     const serp = await getYouTubeSerp(parsed.data.keyword, parsed.data.maxVideos);
     return NextResponse.json(serp);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "YouTube API failed.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    const formatted = formatExternalApiError(error, "google");
+    return NextResponse.json(
+      { error: formatted.message },
+      { status: formatted.status }
+    );
   }
 }
