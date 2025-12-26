@@ -9,7 +9,7 @@ current YouTube results are weak or outdated.
 - YouTube SERP analysis with competition + optimization strength signals
 - Hot Score (0-100) with breakdown (Volume, Competition, Optimization, Freshness)
 - Weighted scoring (optional) using your channel profile
-- Topic Planner with local persistence and SEO Studio recommendations
+- SEO Studio recommendations for titles, descriptions, and tags
 - In-memory cache + optional Vercel KV cache + API rate limiting
 
 ## Tech stack

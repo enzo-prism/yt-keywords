@@ -114,12 +114,7 @@ const defaultConstants: ConstantsResponse = {
   trendsEnabled: false,
 };
 
-type ExploreTabProps = {
-  savedKeywords: Set<string>;
-  onSave: (opportunity: OpportunityResult) => void;
-};
-
-export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
+export function ExploreTab() {
   const [seed, setSeed] = useState("");
   const [maxKeywords, setMaxKeywords] = useState(25);
   const [videosPerKeyword, setVideosPerKeyword] = useState(30);
@@ -726,17 +721,6 @@ export function ExploreTab({ savedKeywords, onSave }: ExploreTabProps) {
                               }}
                             >
                               View
-                            </Button>
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                onSave(item);
-                              }}
-                              disabled={savedKeywords.has(item.keyword.toLowerCase())}
-                            >
-                              {savedKeywords.has(item.keyword.toLowerCase()) ? "Saved" : "Save"}
                             </Button>
                           </div>
                         </TableCell>

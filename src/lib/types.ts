@@ -106,17 +106,3 @@ export type ChannelProfile = {
   avgViews: number;
   avgViewsPerDay: number;
 };
-
-export type TopicPlanItem = {
-  id: string;
-  keyword: string;
-  clusterLabel?: string;
-  volume: number;
-  scores: ScoreBreakdown;
-  recommendedTitle?: string;
-  recommendedTags?: string[];
-  notes: string;
-  status: "Idea" | "Script" | "Record" | "Edit" | "Publish" | "Done";
-  createdAt: string;
-  updatedAt: string;
-};

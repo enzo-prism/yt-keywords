@@ -1,19 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import { Flame } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ExploreTab } from "@/components/explore-tab";
-import { PlannerTab } from "@/components/planner-tab";
-import { usePlanner } from "@/hooks/usePlanner";
 
 export default function Home() {
-  const planner = usePlanner();
-  const [activeTab, setActiveTab] = useState("discover");
-
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
       <div className="pointer-events-none absolute inset-0">
@@ -66,41 +59,16 @@ export default function Home() {
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
-              <Button size="lg" onClick={() => setActiveTab("discover")}>
-                Find hot ideas
-              </Button>
-              <Button
-                size="lg"
-                variant="secondary"
-                onClick={() => setActiveTab("planner")}
-              >
-                Open planner
+              <Button size="lg" asChild>
+                <a href="#discover">Find hot ideas</a>
               </Button>
             </div>
           </div>
         </header>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList>
-            <TabsTrigger value="discover">Discover</TabsTrigger>
-            <TabsTrigger value="planner">Planner</TabsTrigger>
-          </TabsList>
-          <TabsContent value="discover">
-            <ExploreTab
-              savedKeywords={planner.savedKeywordSet}
-              onSave={planner.addFromOpportunity}
-            />
-          </TabsContent>
-          <TabsContent value="planner">
-            <PlannerTab
-              items={planner.items}
-              setItems={planner.setItems}
-              updateItem={planner.updateItem}
-              removeItem={planner.removeItem}
-              clearItems={planner.clearItems}
-            />
-          </TabsContent>
-        </Tabs>
+        <section id="discover" className="scroll-mt-20">
+          <ExploreTab />
+        </section>
       </main>
     </div>
   );
