@@ -17,7 +17,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 const siteDescription =
-  "HotContent finds rising YouTube searches, weak or outdated results, and SEO-ready titles so you post before the wave peaks.";
+  "Test how hot video ideas are BEFORE you start shooting.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://hotcontent.app"),

@@ -54,8 +54,7 @@ export default function Home() {
                 Publish what&apos;s about to blow up.
               </h1>
               <p className="max-w-2xl text-lg text-muted-foreground">
-                HotContent finds rising YouTube searches, weak or outdated results,
-                and SEO-ready titles so you post before the wave peaks.
+                Test how hot video ideas are BEFORE you start shooting.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
