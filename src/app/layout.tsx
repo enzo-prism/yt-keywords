@@ -26,6 +26,28 @@ export const metadata: Metadata = {
     template: "%s — hotcontent.app",
   },
   description: siteDescription,
+  icons: {
+    icon: [
+      {
+        url: "/favicon%20small.png",
+        sizes: "32x32",
+        type: "image/png",
+      },
+      {
+        url: "/Favicon%20large.png",
+        sizes: "256x256",
+        type: "image/png",
+      },
+    ],
+    apple: [
+      {
+        url: "/Favicon%20large.png",
+        sizes: "256x256",
+        type: "image/png",
+      },
+    ],
+    shortcut: "/favicon%20small.png",
+  },
   openGraph: {
     title: "HotContent - Publish what's about to blow up",
     description: siteDescription,
