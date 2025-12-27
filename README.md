@@ -107,4 +107,8 @@ pnpm test
 ## Notes
 
 - Rate limit: 30 requests / 5 minutes per IP for `/api/*` routes.
-- Cache TTL: keywords (24h) and YouTube results (12h) in memory.
+- Cache TTL: keywords (24h), YouTube SERPs (6h), channel stats (12h) in memory.
+
+## Contributor notes
+
+See `AGENTS.md` for implementation details, data flow, and guardrails.
