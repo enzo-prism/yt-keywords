@@ -90,12 +90,13 @@ function parseYouTubeError(
     parsed?.error?.errors?.[0]?.message ??
     fallback;
 
+  const isQuotaExceeded =
+    reason === "quotaExceeded" || reason === "dailyLimitExceeded";
   const isRateLimit =
     status === 429 ||
     reason === "rateLimitExceeded" ||
-    reason === "userRateLimitExceeded";
-  const isQuotaExceeded =
-    reason === "quotaExceeded" || reason === "dailyLimitExceeded";
+    reason === "userRateLimitExceeded" ||
+    isQuotaExceeded;
   const isAuthError =
     reason === "accessNotConfigured" ||
     reason === "keyInvalid" ||
@@ -126,7 +127,9 @@ async function withGlobalLimit<T>(fn: () => Promise<T>) {
 }
 
 export function isYouTubeRateLimitError(error: unknown): boolean {
-  if (error instanceof YouTubeApiError) return error.isRateLimit;
+  if (error instanceof YouTubeApiError) {
+    return error.isRateLimit || error.isQuotaExceeded;
+  }
   if (error instanceof Error) {
     const message = error.message.toLowerCase();
     return (

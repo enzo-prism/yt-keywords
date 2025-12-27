@@ -10,7 +10,7 @@ type ExternalApiError = {
 
 function detectRateLimit(message: string, error?: unknown): boolean {
   if (error instanceof YouTubeApiError) {
-    return error.isRateLimit;
+    return error.isRateLimit || error.isQuotaExceeded;
   }
   const lower = message.toLowerCase();
   const statusMatch = message.match(/\((\d{3})\)/);
