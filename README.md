@@ -33,6 +33,9 @@ YOUTUBE_API_KEY=your_key_here
 APP_URL=http://localhost:3000
 # Optional
 KEYWORDTOOL_TRENDS_ENABLED=false
+# Optional (quota tracking)
+YOUTUBE_DAILY_QUOTA=
+KEYWORDTOOL_DAILY_LIMIT=
 # Optional (Vercel KV)
 KV_REST_API_URL=
 KV_REST_API_TOKEN=

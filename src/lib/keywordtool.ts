@@ -7,6 +7,7 @@ import {
 import { getCachedValue, setCachedValue } from "./cache/persistent.ts";
 import { getEnv, getEnvStatus } from "./env.ts";
 import { fetchJson } from "./http.ts";
+import { recordApiUsage } from "./api-usage.ts";
 import type { KeywordIdea } from "./types.ts";
 
 const SUGGESTIONS_ENDPOINT =
@@ -214,6 +215,10 @@ async function fetchSuggestions(args: {
     },
     { timeoutMs: 12000, retry: 1 }
   );
+  void recordApiUsage({
+    provider: "keywordtool",
+    endpoint: args.mode === "trends" ? "trends" : "suggestions",
+  });
 
   assertNoKeywordToolErrors(payload);
   const suggestions = extractKeywordStrings(payload);
@@ -260,6 +265,7 @@ async function fetchVolumes(args: {
     },
     { timeoutMs: 12000, retry: 1 }
   );
+  void recordApiUsage({ provider: "keywordtool", endpoint: "volume" });
 
   assertNoKeywordToolErrors(payload);
   const volumeMap = buildVolumeMap(payload);

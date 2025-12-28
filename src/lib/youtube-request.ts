@@ -1,5 +1,6 @@
 import pLimit from "p-limit";
 
+import { getYouTubeEndpointFromUrl, recordApiUsage } from "./api-usage.ts";
 import { getEnv } from "./env.ts";
 
 const YOUTUBE_CONCURRENCY = 4;
@@ -168,6 +169,8 @@ export async function youtubeFetchJson<T>(
       });
 
       if (response.ok) {
+        const endpoint = getYouTubeEndpointFromUrl(url);
+        void recordApiUsage({ provider: "youtube", endpoint });
         return (await response.json()) as T;
       }
 
@@ -200,6 +203,8 @@ export async function youtubeFetchJson<T>(
       );
 
       if (attempt >= retries || !shouldRetry(apiError)) {
+        const endpoint = getYouTubeEndpointFromUrl(url);
+        void recordApiUsage({ provider: "youtube", endpoint });
         throw apiError;
       }
 
