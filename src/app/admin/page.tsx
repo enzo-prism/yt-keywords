@@ -1,7 +1,9 @@
-import { Activity, Flame } from "lucide-react";
+import { Activity, ArrowLeft, Flame } from "lucide-react";
+import Link from "next/link";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -104,6 +106,12 @@ export default async function AdminPage() {
               Resets at {resetAt.toISOString().slice(0, 16).replace("T", " ")}{" "}
               UTC
             </Badge>
+            <Button variant="outline" size="sm" asChild className="ml-auto">
+              <Link href="/">
+                <ArrowLeft className="h-3.5 w-3.5" />
+                Back to home
+              </Link>
+            </Button>
           </div>
         </header>
 
